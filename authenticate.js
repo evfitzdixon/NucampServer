@@ -7,18 +7,22 @@ const jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 
 const config = require('./config.js');
 
+// Local strategy for username and password authentication
 exports.local = passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser())
 
+// Function to generate a JWT token
 exports.getToken = function(user) {
     return jwt.sign(user, config.secretKey, {expiresIn: 3600});
 };
 
+// Options for JWT strategy
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
 
+// JWT strategy for token-based user authentication
 exports.jwtPassport = passport.use(
     new JwtStrategy(
         opts,
@@ -37,5 +41,17 @@ exports.jwtPassport = passport.use(
     )
 );
 
+// Middleware to verify user is authenticated
 exports.verifyUser = passport.authenticate('jwt', { session: false });
+
+// Middleware to verify user is an admin
+exports.verifyAdmin = (req, res, next) => {
+    if (req.user && req.user.admin) {
+        return next();
+    } else {
+        var err = new Error("You are not authorized to perform this operation!");
+        err.status = 403;
+        return next(err);
+    }
+};
 
