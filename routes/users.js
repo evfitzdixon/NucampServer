@@ -2,12 +2,13 @@ const express = require('express');
 const User = require('../models/user');
 const passport = require('passport');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const usersRouter = express.Router();
 
 /* GET users listing. */
 usersRouter.route('/')
-.get(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.get(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     User.find({})
     .then((users) => {
         res.statusCode = 200;
@@ -18,7 +19,7 @@ usersRouter.route('/')
 });
 
 usersRouter.route('/signup')
-.post((req, res, next) => {
+.post(cors.corsWithOptions, (req, res, next) => {
     User.register(
     new User({username: req.body.username}),
     req.body.password,
@@ -54,7 +55,7 @@ usersRouter.route('/signup')
 });
 
 usersRouter.route('/login')
-.post(passport.authenticate('local'), (req, res) => {
+.post(cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
     const token = authenticate.getToken({_id: req.user._id});
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
@@ -62,7 +63,7 @@ usersRouter.route('/login')
 });
 
 usersRouter.route('/logout')
-.get(authenticate.verifyUser, (req, res) => {
+.get(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.json({ success: true, status: 'You have successfully logged out!' });
